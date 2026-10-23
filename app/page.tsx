@@ -122,8 +122,20 @@ function sortMembers(list: Member[], sort: SortOption) {
 // Member photo
 // --------------------
 
-function MemberPhoto({ member }: { member: Member }) {
+function MemberPhoto({
+  member,
+  size = "normal",
+}: {
+  member: Member;
+  size?: "compact" | "normal" | "large";
+}) {
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
+
+  const sizes = {
+    compact: "h-11 w-11 text-sm",
+    normal: "h-16 w-16 text-lg",
+    large: "h-24 w-24 text-2xl",
+  };
 
   const initials = member.name
     .split(" ")
@@ -133,7 +145,9 @@ function MemberPhoto({ member }: { member: Member }) {
 
   if (!member.photo || failedPhoto === member.photo) {
     return (
-      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-200 font-bold text-slate-600">
+      <div
+        className={`flex shrink-0 items-center justify-center rounded-xl bg-slate-200 font-bold text-slate-600 ${sizes[size]}`}
+      >
         {initials}
       </div>
     );
@@ -145,7 +159,7 @@ function MemberPhoto({ member }: { member: Member }) {
       src={member.photo}
       alt={member.name}
       onError={() => setFailedPhoto(member.photo ?? null)}
-      className="h-16 w-16 shrink-0 rounded-xl object-cover"
+      className={`shrink-0 rounded-xl object-cover ${sizes[size]}`}
     />
   );
 }
@@ -159,18 +173,20 @@ function MemberCard({
   selectable,
   checked,
   onToggle,
+  size = "normal",
 }: {
   member: Member;
   selectable?: boolean;
   checked?: boolean;
   onToggle?: () => void;
+  size?: "compact" | "normal" | "large";
 }) {
   const homePM = isHomePastMaster(member);
   const districtLabel = getDistrictLabel(member);
 
   const content = (
     <>
-      <MemberPhoto member={member} />
+      <MemberPhoto member={member} size={size} />
 
       <div className="min-w-0 flex-1">
         <h3 className="font-semibold text-slate-900">
@@ -235,7 +251,11 @@ function MemberCard({
   }
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div
+      className={`flex items-center gap-4 rounded-2xl border border-slate-200 bg-white shadow-sm ${
+        size === "compact" ? "p-2" : "p-4"
+      }`}
+    >
       {content}
     </div>
   );
@@ -260,6 +280,9 @@ export default function Home() {
     getServerAttendanceSnapshot,
   );
 
+  const [recognitionView, setRecognitionView] = useState<
+    "compact" | "detailed"
+  >("detailed");
   const selected = useMemo(() => {
     try {
       const parsed: unknown = JSON.parse(attendanceSnapshot);
@@ -324,6 +347,18 @@ export default function Home() {
   // of directory search/filter settings.
   const attending = members.filter((member) => selectedIds.has(member.id));
 
+  const attendingDistrictOfficers = sortMembers(
+    attending.filter((member) => member.districtPositions.length > 0),
+    recognitionSort,
+  );
+
+  const attendingPastMasters = sortMembers(
+    attending.filter(
+      (member) =>
+        isHomePastMaster(member) && member.districtPositions.length === 0,
+    ),
+    recognitionSort,
+  );
   const attendingHome = sortMembers(
     attending.filter(isHomePastMaster),
     recognitionSort,
@@ -334,7 +369,12 @@ export default function Home() {
     recognitionSort,
   );
 
-  function renderGroup(title: string, group: Member[], selectable: boolean) {
+  function renderGroup(
+    title: string,
+    group: Member[],
+    selectable: boolean,
+    size: "compact" | "normal" | "large" = "normal",
+  ) {
     if (group.length === 0) return null;
 
     return (
@@ -354,6 +394,7 @@ export default function Home() {
               selectable={selectable}
               checked={selectedIds.has(member.id)}
               onToggle={() => toggleMember(member.id)}
+              size={size}
             />
           ))}
         </div>
@@ -525,6 +566,32 @@ export default function Home() {
               </p>
             </div>
 
+            <div className="mb-5 flex gap-2 rounded-xl bg-white p-2 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setRecognitionView("compact")}
+                className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold ${
+                  recognitionView === "compact"
+                    ? "bg-blue-800 text-white"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                Compact
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRecognitionView("detailed")}
+                className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold ${
+                  recognitionView === "detailed"
+                    ? "bg-blue-800 text-white"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                Detailed
+              </button>
+            </div>
+
             <label className="mb-6 block rounded-2xl border border-slate-200 bg-white p-4 text-sm font-medium shadow-sm">
               Recognition Order
               <select
@@ -547,13 +614,18 @@ export default function Home() {
                 Nobody selected yet. Go to Attendance to check in the brethren.
               </p>
             )}
-
-            {renderGroup("Forest City Past Masters", attendingHome, false)}
+            {renderGroup(
+              "District Officers",
+              attendingDistrictOfficers,
+              false,
+              recognitionView === "compact" ? "compact" : "large",
+            )}
 
             {renderGroup(
-              "Visiting District Officers",
-              attendingVisitors,
+              "Forest City Past Masters",
+              attendingPastMasters,
               false,
+              recognitionView === "compact" ? "compact" : "large",
             )}
 
             {attending.length > 0 && (
