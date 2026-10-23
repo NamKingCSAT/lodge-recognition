@@ -132,9 +132,9 @@ function MemberPhoto({
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
 
   const sizes = {
-    compact: "h-11 w-11 text-sm",
-    normal: "h-16 w-16 text-lg",
-    large: "h-24 w-24 text-2xl",
+    compact: "h-16 w-16 text-base",
+    normal: "h-26 w-26 text-xl",
+    large: "h-36 w-36 text-2xl",
   };
 
   const initials = member.name
@@ -275,7 +275,7 @@ function MemberCard({
   return (
     <div
       className={`flex items-center gap-4 rounded-2xl border border-slate-200 bg-white shadow-sm ${
-        size === "compact" ? "p-2" : "p-4"
+        size === "compact" ? "p-2" : "p-3 sm:p-4"
       }`}
     >
       {content}
