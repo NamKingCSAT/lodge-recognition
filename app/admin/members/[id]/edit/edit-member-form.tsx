@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import PhotoEditor from "./photo-editor";
 
 type Position = {
   title: string;
@@ -26,9 +27,6 @@ type Member = {
 
 export default function EditMemberForm({ member }: { member: Member }) {
   const router = useRouter();
-  const [photoUrl, setPhotoUrl] = useState(member.photo);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [photoError, setPhotoError] = useState("");
   const [name, setName] = useState(member.name);
   const [lodge, setLodge] = useState(member.lodge);
   const [years, setYears] = useState(member.pastMasterYears.join(", "));
@@ -189,50 +187,6 @@ export default function EditMemberForm({ member }: { member: Member }) {
     }
   }
 
-  async function handlePhotoUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setPhotoError("");
-
-    if (file.size > 5 * 1024 * 1024) {
-      setPhotoError("Please select an image smaller than 5 MB.");
-      event.target.value = "";
-      return;
-    }
-
-    setUploadingPhoto(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("photo", file);
-
-      const response = await fetch(
-        `/api/admin/members/${encodeURIComponent(member.id)}/photo`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error ?? "Photo upload failed");
-      }
-
-      setPhotoUrl(result.photo);
-      router.refresh();
-    } catch (error) {
-      setPhotoError(
-        error instanceof Error ? error.message : "Unable to upload photograph",
-      );
-    } finally {
-      setUploadingPhoto(false);
-      event.target.value = "";
-    }
-  }
-
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-2xl">
@@ -255,61 +209,11 @@ export default function EditMemberForm({ member }: { member: Member }) {
             </p>
           )}
 
-          <section className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <h2 className="mb-4 font-semibold text-slate-900">
-              Member Photograph
-            </h2>
-
-            <div className="flex flex-wrap items-center gap-5">
-              {photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={photoUrl}
-                  alt={`Portrait of ${member.name}`}
-                  className="h-28 w-28 rounded-xl border border-slate-200 object-cover"
-                />
-              ) : (
-                <div className="flex h-28 w-28 items-center justify-center rounded-xl bg-slate-200 text-sm text-slate-500">
-                  No Photo
-                </div>
-              )}
-
-              <div className="min-w-0 flex-1">
-                <label
-                  htmlFor="member-photo"
-                  className="mb-2 block text-sm font-medium"
-                >
-                  Upload or Replace Photograph
-                </label>
-
-                <input
-                  id="member-photo"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handlePhotoUpload}
-                  disabled={uploadingPhoto}
-                  className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-800 file:px-3 file:py-2 file:font-semibold file:text-white disabled:opacity-50"
-                />
-
-                <p className="mt-2 text-xs text-slate-500">
-                  JPG, PNG, or WebP. Maximum 5 MB. The image will be resized
-                  automatically.
-                </p>
-
-                {uploadingPhoto && (
-                  <p role="status" className="mt-2 text-sm text-blue-700">
-                    Uploading photograph...
-                  </p>
-                )}
-
-                {photoError && (
-                  <p role="alert" className="mt-2 text-sm text-red-700">
-                    {photoError}
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
+          <PhotoEditor
+            memberId={member.id}
+            memberName={member.name}
+            initialPhoto={member.photo}
+          />
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             <label className="block text-sm font-medium">
