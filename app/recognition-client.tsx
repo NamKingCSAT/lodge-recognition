@@ -311,37 +311,32 @@ function MemberCard({
           </>
         )}
       </div>
-
-      {selectable && (
-        <span
-          aria-hidden="true"
-          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 text-sm font-bold ${
-            checked
-              ? "border-blue-800 bg-blue-800 text-white"
-              : "border-slate-400 bg-white"
-          }`}
-        >
-          {checked ? "✓" : ""}
-        </span>
-      )}
     </>
   );
 
   if (selectable) {
     return (
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-pressed={checked}
-        aria-label={`${member.name}: ${
-          checked ? "present" : "absent"
-        }. Toggle attendance.`}
+      <div
         className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left shadow-sm transition ${
           checked ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"
         }`}
       >
-        {content}
-      </button>
+        <div className="flex min-w-0 flex-1 items-center gap-4">{content}</div>
+
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-pressed={checked}
+          aria-label={`${member.name}: ${
+            checked ? "present" : "absent"
+          }. Toggle attendance.`}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-blue-800"
+        >
+          <span aria-hidden="true" className="text-xl font-bold">
+            {checked ? "✓" : "+"}
+          </span>
+        </button>
+      </div>
     );
   }
 
