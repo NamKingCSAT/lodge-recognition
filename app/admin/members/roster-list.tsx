@@ -96,13 +96,22 @@ export default function RosterList({ members }: { members: RosterMember[] }) {
             key={member.id}
             className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
           >
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-lg font-bold text-slate-600">
-              {member.name
-                .split(" ")
-                .map((word) => word[0])
-                .join("")
-                .slice(0, 2)}
-            </div>
+            {member.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={member.photo}
+                alt={member.name}
+                className="h-14 w-14 shrink-0 rounded-xl object-cover"
+              />
+            ) : (
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-lg font-bold text-slate-600">
+                {member.name
+                  .split(" ")
+                  .map((word) => word[0])
+                  .join("")
+                  .slice(0, 2)}
+              </div>
+            )}
 
             <div className="min-w-0 flex-1">
               <h2 className="font-semibold text-slate-900">
