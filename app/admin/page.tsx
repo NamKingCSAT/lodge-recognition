@@ -60,16 +60,21 @@ async function AdminContent() {
           <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
             <h2 className="font-semibold text-slate-900">Manage Brethren</h2>
 
-            <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
-              <h2 className="font-semibold text-slate-900">Manage Brethren</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              View and maintain Past Masters and District Officers.
+            </p>
 
-              <p className="mt-2 text-sm text-slate-600">
-                Add and maintain Past Masters and District Officers.
-              </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href="/admin/members"
+                className="rounded-xl bg-blue-800 px-4 py-3 text-sm font-semibold text-white"
+              >
+                Manage Roster
+              </Link>
 
               <Link
                 href="/admin/members/new"
-                className="mt-4 inline-block rounded-xl bg-blue-800 px-4 py-3 text-sm font-semibold text-white"
+                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800"
               >
                 + Add Brother
               </Link>
