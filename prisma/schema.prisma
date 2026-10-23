@@ -1,0 +1,47 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Member {
+  id                 String   @id @default(cuid())
+  name               String
+  photo              String?
+  lodge              String
+  pastMasterYears    Int[]
+  honorific          String?
+  currentLodgeOffice String?
+  notes              String?
+
+  districtPositions  DistrictPosition[]
+
+  isArchived         Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([name])
+  @@index([lodge])
+}
+
+model DistrictPosition {
+  id         String         @id @default(cuid())
+  memberId   String
+  title      String
+  status     PositionStatus
+  startYear  Int?
+  endYear    Int?
+
+member     Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+}
+
+enum PositionStatus {
+  current
+  past
+}
