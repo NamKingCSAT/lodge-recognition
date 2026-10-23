@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { Member } from "../data/members";
 
 type Tab = "directory" | "attendance" | "recognition";
@@ -122,6 +122,59 @@ function sortMembers(list: Member[], sort: SortOption) {
 // Member photo
 // --------------------
 
+function PhotoViewer({
+  photo,
+  name,
+  onClose,
+}: {
+  photo: string;
+  name: string;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      role="presentation"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Photograph of ${name}`}
+        className="relative flex max-h-full w-full max-w-2xl flex-col items-center gap-4"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close photograph"
+          className="absolute right-0 top-0 z-10 rounded-full bg-white px-3 py-2 text-xl font-bold text-slate-900"
+        >
+          ×
+        </button>
+
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={photo}
+          alt={name}
+          className="max-h-[80dvh] w-full rounded-xl object-contain"
+        />
+
+        <p className="text-center text-xl font-semibold text-white">{name}</p>
+      </div>
+    </div>
+  );
+}
+
 function MemberPhoto({
   member,
   size = "normal",
@@ -130,7 +183,7 @@ function MemberPhoto({
   size?: "compact" | "normal" | "large";
 }) {
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
-
+  const [showViewer, setShowViewer] = useState(false);
   const sizes = {
     compact: "h-16 w-16 text-base",
     normal: "h-26 w-26 text-xl",
@@ -154,13 +207,33 @@ function MemberPhoto({
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={member.photo}
-      alt={member.name}
-      onError={() => setFailedPhoto(member.photo ?? null)}
-      className={`shrink-0 rounded-xl object-cover ${sizes[size]}`}
-    />
+    <>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          setShowViewer(true);
+        }}
+        aria-label={`Enlarge photograph of ${member.name}`}
+        className="shrink-0 cursor-zoom-in rounded-xl"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={member.photo}
+          alt={member.name}
+          onError={() => setFailedPhoto(member.photo ?? null)}
+          className={`rounded-xl object-cover ${sizes[size]}`}
+        />
+      </button>
+
+      {showViewer && (
+        <PhotoViewer
+          photo={member.photo}
+          name={member.name}
+          onClose={() => setShowViewer(false)}
+        />
+      )}
+    </>
   );
 }
 
