@@ -4,11 +4,22 @@ import { useMemo, useState, useSyncExternalStore } from "react";
 import { members, type Member } from "../data/members";
 
 type Tab = "directory" | "attendance" | "recognition";
+type SortOption = "year-asc" | "year-desc" | "name-asc" | "name-desc";
+type MemberFilter =
+  | "all"
+  | "home"
+  | "district-all"
+  | "district-current"
+  | "district-past"
+  | "district-none";
 
-const STORAGE_KEY = "lodge-recognition-attendance";
 const HOME_LODGE = "Forest City Lodge";
-
+const STORAGE_KEY = "lodge-recognition-attendance";
 const ATTENDANCE_EVENT = "lodge-attendance-updated";
+
+// --------------------
+// Attendance storage
+// --------------------
 
 function getAttendanceSnapshot() {
   try {
@@ -32,6 +43,10 @@ function subscribeToAttendance(callback: () => void) {
   };
 }
 
+// --------------------
+// Member utilities
+// --------------------
+
 function isHomePastMaster(member: Member) {
   return member.lodge === HOME_LODGE;
 }
@@ -44,22 +59,71 @@ function getFirstYear(member: Member) {
 
 function getYearLabel(member: Member) {
   return member.pastMasterYears.length
-    ? member.pastMasterYears.join(", ")
+    ? [...member.pastMasterYears].sort((a, b) => a - b).join(", ")
     : "Unknown";
 }
 
 function getDistrictLabel(member: Member) {
   return member.districtPositions
-    .map((position) => {
-      const prefix = position.status === "past" ? "Past " : "";
-
-      return `${prefix}${position.title}`;
-    })
+    .map((position) =>
+      position.status === "past" ? `Past ${position.title}` : position.title,
+    )
     .join(" · ");
 }
 
+function hasDistrictStatus(member: Member, status: "current" | "past") {
+  return member.districtPositions.some(
+    (position) => position.status === status,
+  );
+}
+
+function matchesMemberFilter(member: Member, filter: MemberFilter) {
+  switch (filter) {
+    case "home":
+      return isHomePastMaster(member);
+
+    case "district-all":
+      return member.districtPositions.length > 0;
+
+    case "district-current":
+      return hasDistrictStatus(member, "current");
+
+    case "district-past":
+      return hasDistrictStatus(member, "past");
+
+    case "district-none":
+      return member.districtPositions.length === 0;
+
+    default:
+      return true;
+  }
+}
+
+function sortMembers(list: Member[], sort: SortOption) {
+  return [...list].sort((a, b) => {
+    switch (sort) {
+      case "year-desc":
+        return (
+          getFirstYear(b) - getFirstYear(a) || a.name.localeCompare(b.name)
+        );
+      case "name-asc":
+        return a.name.localeCompare(b.name);
+      case "name-desc":
+        return b.name.localeCompare(a.name);
+      default:
+        return (
+          getFirstYear(a) - getFirstYear(b) || a.name.localeCompare(b.name)
+        );
+    }
+  });
+}
+
+// --------------------
+// Member photo
+// --------------------
+
 function MemberPhoto({ member }: { member: Member }) {
-  const [failed, setFailed] = useState(false);
+  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
 
   const initials = member.name
     .split(" ")
@@ -67,9 +131,9 @@ function MemberPhoto({ member }: { member: Member }) {
     .join("")
     .slice(0, 2);
 
-  if (!member.photo || failed) {
+  if (!member.photo || failedPhoto === member.photo) {
     return (
-      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-lg font-bold text-slate-600">
+      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-200 font-bold text-slate-600">
         {initials}
       </div>
     );
@@ -80,16 +144,20 @@ function MemberPhoto({ member }: { member: Member }) {
     <img
       src={member.photo}
       alt={member.name}
-      onError={() => setFailed(true)}
+      onError={() => setFailedPhoto(member.photo ?? null)}
       className="h-16 w-16 shrink-0 rounded-xl object-cover"
     />
   );
 }
 
+// --------------------
+// Member card
+// --------------------
+
 function MemberCard({
   member,
-  selectable = false,
-  checked = false,
+  selectable,
+  checked,
   onToggle,
 }: {
   member: Member;
@@ -100,27 +168,21 @@ function MemberCard({
   const homePM = isHomePastMaster(member);
   const districtLabel = getDistrictLabel(member);
 
-  return (
-    <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+  const content = (
+    <>
       <MemberPhoto member={member} />
 
       <div className="min-w-0 flex-1">
         <h3 className="font-semibold text-slate-900">
-          {member.honorific && <span>{member.honorific} </span>}
+          {member.honorific ? `${member.honorific} ` : ""}
           {member.name}
         </h3>
 
         <p className="text-sm text-slate-600">
-          {homePM
-            ? `Forest City Past Master · ${getYearLabel(member)}`
-            : `Visiting Officer · ${member.lodge}`}
+          Past Master · {getYearLabel(member)}
         </p>
 
-        {!homePM && (
-          <p className="text-xs text-slate-500">
-            Past Master · {getYearLabel(member)}
-          </p>
-        )}
+        <p className="text-xs text-slate-500">{member.lodge}</p>
 
         {districtLabel && (
           <p className="mt-1 text-sm font-medium text-blue-700">
@@ -129,27 +191,69 @@ function MemberCard({
         )}
 
         {member.currentLodgeOffice && (
-          <p className="text-sm text-slate-600">{member.currentLodgeOffice}</p>
+          <p className="text-sm text-slate-700">{member.currentLodgeOffice}</p>
+        )}
+
+        {!homePM && (
+          <span className="mt-2 inline-block rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-900">
+            Visiting Officer
+          </span>
         )}
       </div>
 
       {selectable && (
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={onToggle}
-          aria-label={`Mark ${member.name} present`}
-          className="h-6 w-6 shrink-0 cursor-pointer accent-blue-800"
-        />
+        <span
+          aria-hidden="true"
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 text-sm font-bold ${
+            checked
+              ? "border-blue-800 bg-blue-800 text-white"
+              : "border-slate-400 bg-white"
+          }`}
+        >
+          {checked ? "✓" : ""}
+        </span>
       )}
+    </>
+  );
+
+  if (selectable) {
+    return (
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-pressed={checked}
+        aria-label={`${member.name}: ${
+          checked ? "present" : "absent"
+        }. Toggle attendance.`}
+        className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left shadow-sm transition ${
+          checked ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"
+        }`}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      {content}
     </div>
   );
 }
+
+// --------------------
+// Main application
+// --------------------
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>("attendance");
   const [search, setSearch] = useState("");
 
+  const [sort, setSort] = useState<SortOption>("year-asc");
+  const [recognitionSort, setRecognitionSort] =
+    useState<SortOption>("year-asc");
+
+  const [memberFilter, setMemberFilter] = useState<MemberFilter>("all");
   const attendanceSnapshot = useSyncExternalStore(
     subscribeToAttendance,
     getAttendanceSnapshot,
@@ -159,7 +263,7 @@ export default function Home() {
   const selected = useMemo(() => {
     try {
       const parsed: unknown = JSON.parse(attendanceSnapshot);
-      const validIds = new Set(members.map((m) => m.id));
+      const validIds = new Set(members.map((member) => member.id));
 
       if (!Array.isArray(parsed)) return [];
 
@@ -171,24 +275,28 @@ export default function Home() {
     }
   }, [attendanceSnapshot]);
 
-  function setSelected(value: string[] | ((previous: string[]) => string[])) {
-    const next = typeof value === "function" ? value(selected) : value;
+  const selectedIds = new Set(selected);
 
+  function saveAttendance(next: string[]) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       window.dispatchEvent(new Event(ATTENDANCE_EVENT));
     } catch {
-      console.warn("Unable to save attendance.");
+      console.warn("Could not save attendance.");
     }
   }
 
   function toggleMember(id: string) {
-    setSelected((previous) =>
-      previous.includes(id)
-        ? previous.filter((value) => value !== id)
-        : [...previous, id],
-    );
+    const next = selectedIds.has(id)
+      ? selected.filter((value) => value !== id)
+      : [...selected, id];
+
+    saveAttendance(next);
   }
+
+  // --------------------
+  // Search and filtering
+  // --------------------
 
   const filteredMembers = members.filter((member) => {
     const searchable = [
@@ -196,32 +304,35 @@ export default function Home() {
       member.lodge,
       member.honorific ?? "",
       member.currentLodgeOffice ?? "",
-      member.pastMasterYears.join(" "),
-      ...member.districtPositions.map((position) => position.title),
+      ...member.pastMasterYears.map(String),
+      ...member.districtPositions.map((p) => p.title),
     ]
       .join(" ")
       .toLowerCase();
 
-    return searchable.includes(search.toLowerCase());
+    const matchesSearch = searchable.includes(search.trim().toLowerCase());
+
+    const matchesType = matchesMemberFilter(member, memberFilter);
+
+    return matchesSearch && matchesType;
   });
 
-  const homeMembers = filteredMembers
-    .filter(isHomePastMaster)
-    .sort((a, b) => getFirstYear(a) - getFirstYear(b));
+  // IMPORTANT: This goes AFTER the closing });
+  const sortedFilteredMembers = sortMembers(filteredMembers, sort);
 
-  const visitingMembers = filteredMembers
-    .filter((member) => !isHomePastMaster(member))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  // Recognition uses ALL selected members, regardless
+  // of directory search/filter settings.
+  const attending = members.filter((member) => selectedIds.has(member.id));
 
-  const attending = members.filter((member) => selected.includes(member.id));
+  const attendingHome = sortMembers(
+    attending.filter(isHomePastMaster),
+    recognitionSort,
+  );
 
-  const attendingHome = attending
-    .filter(isHomePastMaster)
-    .sort((a, b) => getFirstYear(a) - getFirstYear(b));
-
-  const attendingVisitors = attending
-    .filter((member) => !isHomePastMaster(member))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const attendingVisitors = sortMembers(
+    attending.filter((member) => !isHomePastMaster(member)),
+    recognitionSort,
+  );
 
   function renderGroup(title: string, group: Member[], selectable: boolean) {
     if (group.length === 0) return null;
@@ -241,7 +352,7 @@ export default function Home() {
               key={member.id}
               member={member}
               selectable={selectable}
-              checked={selected.includes(member.id)}
+              checked={selectedIds.has(member.id)}
               onToggle={() => toggleMember(member.id)}
             />
           ))}
@@ -250,27 +361,34 @@ export default function Home() {
     );
   }
 
+  const sortOptions: {
+    value: SortOption;
+    label: string;
+  }[] = [
+    { value: "year-asc", label: "PM Year: Oldest First" },
+    { value: "year-desc", label: "PM Year: Newest First" },
+    { value: "name-asc", label: "Name: A–Z" },
+    { value: "name-desc", label: "Name: Z–A" },
+  ];
+
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
       <div className="mx-auto max-w-3xl px-4 py-8">
         <header className="mb-7 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Lodge Recognition
-          </h1>
-
+          <h1 className="text-3xl font-bold">Lodge Recognition</h1>
           <p className="mt-2 text-slate-600">Forest City Lodge</p>
-
           <p className="text-sm text-slate-500">
             Past Masters & District Officers
           </p>
         </header>
 
+        {/* Navigation */}
         <nav className="mb-6 grid grid-cols-3 gap-2">
           {(["directory", "attendance", "recognition"] as Tab[]).map((item) => (
             <button
               key={item}
               onClick={() => setTab(item)}
-              className={`rounded-xl px-2 py-3 text-sm font-semibold capitalize transition ${
+              className={`rounded-xl px-2 py-3 text-sm font-semibold capitalize ${
                 tab === item
                   ? "bg-blue-800 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-200"
@@ -281,44 +399,93 @@ export default function Home() {
           ))}
         </nav>
 
+        {/* Directory and attendance controls */}
         {tab !== "recognition" && (
-          <input
-            type="search"
-            placeholder="Search name, office, lodge, or year..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="mb-6 w-full rounded-xl border border-slate-300 bg-white p-3 outline-none focus:border-blue-600"
-          />
+          <div className="mb-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <input
+              type="search"
+              placeholder="Search name, year, lodge, or office..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-600"
+            />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="block text-sm font-medium">
+                Sort by
+                <select
+                  value={sort}
+                  onChange={(event) =>
+                    setSort(event.target.value as SortOption)
+                  }
+                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block text-sm font-medium">
+                Member Type
+                <select
+                  value={memberFilter}
+                  onChange={(event) =>
+                    setMemberFilter(event.target.value as MemberFilter)
+                  }
+                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3"
+                >
+                  <option value="all">All Brethren</option>
+                  <option value="home">Forest City Past Masters</option>
+                  <option value="district-all">All District Officers</option>
+                  <option value="district-current">
+                    Current District Officers
+                  </option>
+                  <option value="district-past">Past District Officers</option>
+                  <option value="district-none">No District Position</option>
+                </select>
+              </label>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Showing {filteredMembers.length} of {members.length} brethren.
+              Sorting and filtering do not change attendance.
+            </p>
+          </div>
         )}
 
+        {/* Directory */}
         {tab === "directory" && (
           <>
             <h2 className="mb-5 text-2xl font-bold">Member Directory</h2>
 
-            {renderGroup("Forest City Past Masters", homeMembers, false)}
-
-            {renderGroup("Visiting District Officers", visitingMembers, false)}
+            {renderGroup("All Brethren", sortedFilteredMembers, false)}
 
             {filteredMembers.length === 0 && (
-              <p className="text-center text-slate-500">No members found.</p>
+              <p className="rounded-xl bg-white p-6 text-center text-slate-500">
+                No matching brethren.
+              </p>
             )}
           </>
         )}
 
+        {/* Attendance */}
         {tab === "attendance" && (
           <>
-            <div className="mb-5 flex items-center justify-between">
+            <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-2xl font-bold">Attendance</h2>
                 <p className="text-sm text-slate-600">
-                  {selected.length} brethren present
+                  {selected.length} of {members.length} present
                 </p>
               </div>
 
               <button
                 onClick={() => {
                   if (window.confirm("Clear all attendance selections?")) {
-                    setSelected([]);
+                    saveAttendance([]);
                   }
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium"
@@ -327,9 +494,17 @@ export default function Home() {
               </button>
             </div>
 
-            {renderGroup("Forest City Past Masters", homeMembers, true)}
+            {renderGroup(
+              "Select Brethren Present",
+              sortedFilteredMembers,
+              true,
+            )}
 
-            {renderGroup("Visiting District Officers", visitingMembers, true)}
+            {filteredMembers.length === 0 && (
+              <p className="rounded-xl bg-white p-6 text-center text-slate-500">
+                No matching brethren.
+              </p>
+            )}
 
             <button
               onClick={() => setTab("recognition")}
@@ -340,21 +515,37 @@ export default function Home() {
           </>
         )}
 
+        {/* Recognition */}
         {tab === "recognition" && (
           <>
             <div className="mb-6">
               <h2 className="text-2xl font-bold">Recognition List</h2>
-
               <p className="text-sm text-slate-600">
                 {attending.length} brethren selected
               </p>
             </div>
 
+            <label className="mb-6 block rounded-2xl border border-slate-200 bg-white p-4 text-sm font-medium shadow-sm">
+              Recognition Order
+              <select
+                value={recognitionSort}
+                onChange={(event) =>
+                  setRecognitionSort(event.target.value as SortOption)
+                }
+                className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             {attending.length === 0 && (
-              <div className="rounded-xl bg-white p-6 text-center text-slate-600">
-                Nobody has been selected yet. Return to Attendance to check in
-                the brethren who are present.
-              </div>
+              <p className="rounded-xl bg-white p-6 text-center text-slate-600">
+                Nobody selected yet. Go to Attendance to check in the brethren.
+              </p>
             )}
 
             {renderGroup("Forest City Past Masters", attendingHome, false)}
@@ -367,15 +558,15 @@ export default function Home() {
 
             {attending.length > 0 && (
               <p className="mt-5 text-xs text-slate-500">
-                Forest City Past Masters are ordered by their earliest year of
-                service. Visiting officers are listed alphabetically. Confirm
-                ceremonial precedence with your lodge protocol.
+                Each brother appears once. The two groups are sorted
+                independently. This is a roster order, not verified ceremonial
+                precedence.
               </p>
             )}
 
             <button
               onClick={() => setTab("attendance")}
-              className="mt-6 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-800"
+              className="mt-6 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold"
             >
               ← Back to Attendance
             </button>
