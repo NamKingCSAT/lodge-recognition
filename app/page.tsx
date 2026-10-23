@@ -181,15 +181,33 @@ function MemberCard({
   onToggle?: () => void;
   size?: "compact" | "normal" | "large";
 }) {
-  const homePM = isHomePastMaster(member);
   const districtLabel = getDistrictLabel(member);
+  const isCompact = size === "compact";
+
+  const currentDistrictOffice = member.districtPositions.find(
+    (position) => position.status === "current",
+  );
+
+  const pastDistrictOffice = member.districtPositions.find(
+    (position) => position.status === "past",
+  );
+
+  const compactTitle = currentDistrictOffice
+    ? currentDistrictOffice.title
+    : pastDistrictOffice
+      ? `Past ${pastDistrictOffice.title}`
+      : (member.currentLodgeOffice ?? "");
 
   const content = (
     <>
       <MemberPhoto member={member} size={size} />
 
       <div className="min-w-0 flex-1">
-        <h3 className="font-semibold text-slate-900">
+        <h3
+          className={`font-semibold text-slate-900 ${
+            isCompact ? "text-sm" : "text-base"
+          }`}
+        >
           {member.honorific ? `${member.honorific} ` : ""}
           {member.name}
         </h3>
@@ -198,22 +216,26 @@ function MemberCard({
           Past Master · {getYearLabel(member)}
         </p>
 
-        <p className="text-xs text-slate-500">{member.lodge}</p>
+        {isCompact ? (
+          compactTitle && (
+            <p className="text-xs font-medium text-blue-700">{compactTitle}</p>
+          )
+        ) : (
+          <>
+            <p className="text-xs text-slate-500">{member.lodge}</p>
 
-        {districtLabel && (
-          <p className="mt-1 text-sm font-medium text-blue-700">
-            {districtLabel}
-          </p>
-        )}
+            {districtLabel && (
+              <p className="mt-1 text-sm font-medium text-blue-700">
+                {districtLabel}
+              </p>
+            )}
 
-        {member.currentLodgeOffice && (
-          <p className="text-sm text-slate-700">{member.currentLodgeOffice}</p>
-        )}
-
-        {!homePM && (
-          <span className="mt-2 inline-block rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-900">
-            Visiting Officer
-          </span>
+            {member.currentLodgeOffice && (
+              <p className="text-sm text-slate-700">
+                {member.currentLodgeOffice}
+              </p>
+            )}
+          </>
         )}
       </div>
 
@@ -357,15 +379,6 @@ export default function Home() {
       (member) =>
         isHomePastMaster(member) && member.districtPositions.length === 0,
     ),
-    recognitionSort,
-  );
-  const attendingHome = sortMembers(
-    attending.filter(isHomePastMaster),
-    recognitionSort,
-  );
-
-  const attendingVisitors = sortMembers(
-    attending.filter((member) => !isHomePastMaster(member)),
     recognitionSort,
   );
 
@@ -524,14 +537,19 @@ export default function Home() {
               </div>
 
               <button
+                type="button"
                 onClick={() => {
-                  if (window.confirm("Clear all attendance selections?")) {
+                  if (
+                    window.confirm(
+                      "Start a new meeting? This will clear all attendance selections.",
+                    )
+                  ) {
                     saveAttendance([]);
                   }
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium"
               >
-                Clear All
+                New Meeting
               </button>
             </div>
 
