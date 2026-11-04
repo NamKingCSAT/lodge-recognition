@@ -8,6 +8,7 @@ export default function NewMemberPage() {
   const [lodge, setLodge] = useState("Forest City Lodge");
   const [years, setYears] = useState("");
   const [honorific, setHonorific] = useState("");
+  const [isFrequent, setIsFrequent] = useState(false);
   const [currentLodgeOffice, setCurrentLodgeOffice] = useState("");
   const [districtTitle, setDistrictTitle] = useState("");
   const [districtStatus, setDistrictStatus] = useState<"current" | "past">(
@@ -25,7 +26,9 @@ export default function NewMemberPage() {
     setError("");
     setMessage("");
 
-    const rawYears = years.split(",").map((year) => year.trim());
+    const rawYears = years.trim()
+      ? years.split(",").map((year) => year.trim())
+      : [];
 
     const parsedYears = rawYears.map(Number);
 
@@ -54,6 +57,7 @@ export default function NewMemberPage() {
           lodge,
           pastMasterYears: parsedYears,
           honorific,
+          isFrequent,
           currentLodgeOffice,
           districtTitle,
           districtStatus,
@@ -72,6 +76,7 @@ export default function NewMemberPage() {
       setName("");
       setYears("");
       setHonorific("");
+      setIsFrequent(false);
       setCurrentLodgeOffice("");
       setDistrictTitle("");
       setDistrictStatus("current");
@@ -127,16 +132,15 @@ export default function NewMemberPage() {
             </label>
 
             <label className="block text-sm font-medium">
-              Past Master Year(s) *
+              Past Master Year(s)
               <input
-                required
                 value={years}
                 onChange={(e) => setYears(e.target.value)}
                 placeholder="e.g. 2005, 2008"
                 className={inputStyle}
               />
               <span className="mt-1 block text-xs text-slate-500">
-                Separate multiple years with commas.
+                Separate multiple years with commas. Leave blank if unknown.
               </span>
             </label>
 
@@ -149,6 +153,21 @@ export default function NewMemberPage() {
                 placeholder="e.g. W.B. or R.W.B."
                 className={inputStyle}
               />
+            </label>
+
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <input
+                type="checkbox"
+                checked={isFrequent}
+                onChange={(event) => setIsFrequent(event.target.checked)}
+                className="h-5 w-5 accent-blue-800"
+              />
+              <span>
+                <span className="block font-semibold">Frequent Attendee</span>
+                <span className="text-sm text-slate-600">
+                  Prioritize this brother in the Attendance list.
+                </span>
+              </span>
             </label>
 
             <label className="block text-sm font-medium">

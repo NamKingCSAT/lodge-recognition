@@ -30,6 +30,7 @@ async function LiveRoster() {
     honorific: record.honorific ?? undefined,
     currentLodgeOffice: record.currentLodgeOffice ?? undefined,
     notes: record.notes ?? undefined,
+    isFrequent: record.isFrequent,
 
     districtPositions: record.districtPositions.map((position) => ({
       title: position.title,

@@ -22,6 +22,7 @@ type Member = {
   currentLodgeOffice: string | null;
   notes: string | null;
   isArchived: boolean;
+  isFrequent: boolean;
   districtPositions: Position[];
 };
 
@@ -45,6 +46,7 @@ export default function EditMemberForm({ member }: { member: Member }) {
   );
 
   const [isArchived, setIsArchived] = useState(member.isArchived);
+  const [isFrequent, setIsFrequent] = useState(member.isFrequent);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -70,7 +72,8 @@ export default function EditMemberForm({ member }: { member: Member }) {
     setError("");
     setMessage("");
 
-    const rawYears = years.split(",").map((y) => y.trim());
+    const rawYears = years.trim() ? years.split(",").map((y) => y.trim()) : [];
+
     const parsedYears = rawYears.map(Number);
     const currentYear = new Date().getFullYear();
 
@@ -124,6 +127,7 @@ export default function EditMemberForm({ member }: { member: Member }) {
             honorific,
             currentLodgeOffice: currentOffice,
             notes,
+            isFrequent,
             districtPositions: parsedPositions,
           }),
         },
@@ -239,15 +243,14 @@ export default function EditMemberForm({ member }: { member: Member }) {
             </label>
 
             <label className="block text-sm font-medium">
-              Past Master Year(s) *
+              Past Master Year(s)
               <input
-                required
                 value={years}
                 onChange={(e) => setYears(e.target.value)}
                 className={inputClass}
               />
               <span className="mt-1 block text-xs text-slate-500">
-                Separate multiple years with commas.
+                Separate multiple years with commas. Leave blank if unknown.
               </span>
             </label>
 
@@ -281,6 +284,27 @@ export default function EditMemberForm({ member }: { member: Member }) {
                 className={inputClass}
               />
             </label>
+
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={isFrequent}
+                  onChange={(event) => setIsFrequent(event.target.checked)}
+                  className="mt-1 h-5 w-5 accent-blue-800"
+                />
+
+                <span>
+                  <span className="block font-semibold text-slate-900">
+                    Frequent Attendee
+                  </span>
+                  <span className="mt-1 block text-sm text-slate-600">
+                    Prioritize this brother in the Attendance list. This does
+                    not automatically mark him present.
+                  </span>
+                </span>
+              </label>
+            </div>
 
             <div className="border-t border-slate-200 pt-5">
               <div className="flex items-center justify-between gap-3">

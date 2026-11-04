@@ -42,6 +42,7 @@ export type MemberMinAggregateOutputType = {
   honorific: string | null
   currentLodgeOffice: string | null
   notes: string | null
+  isFrequent: boolean | null
   isArchived: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -55,6 +56,7 @@ export type MemberMaxAggregateOutputType = {
   honorific: string | null
   currentLodgeOffice: string | null
   notes: string | null
+  isFrequent: boolean | null
   isArchived: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -69,6 +71,7 @@ export type MemberCountAggregateOutputType = {
   honorific: number
   currentLodgeOffice: number
   notes: number
+  isFrequent: number
   isArchived: number
   createdAt: number
   updatedAt: number
@@ -92,6 +95,7 @@ export type MemberMinAggregateInputType = {
   honorific?: true
   currentLodgeOffice?: true
   notes?: true
+  isFrequent?: true
   isArchived?: true
   createdAt?: true
   updatedAt?: true
@@ -105,6 +109,7 @@ export type MemberMaxAggregateInputType = {
   honorific?: true
   currentLodgeOffice?: true
   notes?: true
+  isFrequent?: true
   isArchived?: true
   createdAt?: true
   updatedAt?: true
@@ -119,6 +124,7 @@ export type MemberCountAggregateInputType = {
   honorific?: true
   currentLodgeOffice?: true
   notes?: true
+  isFrequent?: true
   isArchived?: true
   createdAt?: true
   updatedAt?: true
@@ -220,6 +226,7 @@ export type MemberGroupByOutputType = {
   honorific: string | null
   currentLodgeOffice: string | null
   notes: string | null
+  isFrequent: boolean
   isArchived: boolean
   createdAt: Date
   updatedAt: Date
@@ -257,6 +264,7 @@ export type MemberWhereInput = {
   honorific?: Prisma.StringNullableFilter<"Member"> | string | null
   currentLodgeOffice?: Prisma.StringNullableFilter<"Member"> | string | null
   notes?: Prisma.StringNullableFilter<"Member"> | string | null
+  isFrequent?: Prisma.BoolFilter<"Member"> | boolean
   isArchived?: Prisma.BoolFilter<"Member"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Member"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Member"> | Date | string
@@ -272,6 +280,7 @@ export type MemberOrderByWithRelationInput = {
   honorific?: Prisma.SortOrderInput | Prisma.SortOrder
   currentLodgeOffice?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  isFrequent?: Prisma.SortOrder
   isArchived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -290,6 +299,7 @@ export type MemberWhereUniqueInput = Prisma.AtLeast<{
   honorific?: Prisma.StringNullableFilter<"Member"> | string | null
   currentLodgeOffice?: Prisma.StringNullableFilter<"Member"> | string | null
   notes?: Prisma.StringNullableFilter<"Member"> | string | null
+  isFrequent?: Prisma.BoolFilter<"Member"> | boolean
   isArchived?: Prisma.BoolFilter<"Member"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Member"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Member"> | Date | string
@@ -305,6 +315,7 @@ export type MemberOrderByWithAggregationInput = {
   honorific?: Prisma.SortOrderInput | Prisma.SortOrder
   currentLodgeOffice?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  isFrequent?: Prisma.SortOrder
   isArchived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -327,6 +338,7 @@ export type MemberScalarWhereWithAggregatesInput = {
   honorific?: Prisma.StringNullableWithAggregatesFilter<"Member"> | string | null
   currentLodgeOffice?: Prisma.StringNullableWithAggregatesFilter<"Member"> | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"Member"> | string | null
+  isFrequent?: Prisma.BoolWithAggregatesFilter<"Member"> | boolean
   isArchived?: Prisma.BoolWithAggregatesFilter<"Member"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Member"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Member"> | Date | string
@@ -341,6 +353,7 @@ export type MemberCreateInput = {
   honorific?: string | null
   currentLodgeOffice?: string | null
   notes?: string | null
+  isFrequent?: boolean
   isArchived?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -356,6 +369,7 @@ export type MemberUncheckedCreateInput = {
   honorific?: string | null
   currentLodgeOffice?: string | null
   notes?: string | null
+  isFrequent?: boolean
   isArchived?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -371,6 +385,7 @@ export type MemberUpdateInput = {
   honorific?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currentLodgeOffice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFrequent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -386,6 +401,7 @@ export type MemberUncheckedUpdateInput = {
   honorific?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currentLodgeOffice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFrequent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -401,6 +417,7 @@ export type MemberCreateManyInput = {
   honorific?: string | null
   currentLodgeOffice?: string | null
   notes?: string | null
+  isFrequent?: boolean
   isArchived?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -415,6 +432,7 @@ export type MemberUpdateManyMutationInput = {
   honorific?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currentLodgeOffice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFrequent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -429,6 +447,7 @@ export type MemberUncheckedUpdateManyInput = {
   honorific?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currentLodgeOffice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFrequent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -451,6 +470,7 @@ export type MemberCountOrderByAggregateInput = {
   honorific?: Prisma.SortOrder
   currentLodgeOffice?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isFrequent?: Prisma.SortOrder
   isArchived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -468,6 +488,7 @@ export type MemberMaxOrderByAggregateInput = {
   honorific?: Prisma.SortOrder
   currentLodgeOffice?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isFrequent?: Prisma.SortOrder
   isArchived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -481,6 +502,7 @@ export type MemberMinOrderByAggregateInput = {
   honorific?: Prisma.SortOrder
   currentLodgeOffice?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isFrequent?: Prisma.SortOrder
   isArchived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -543,6 +565,7 @@ export type MemberCreateWithoutDistrictPositionsInput = {
   honorific?: string | null
   currentLodgeOffice?: string | null
   notes?: string | null
+  isFrequent?: boolean
   isArchived?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -557,6 +580,7 @@ export type MemberUncheckedCreateWithoutDistrictPositionsInput = {
   honorific?: string | null
   currentLodgeOffice?: string | null
   notes?: string | null
+  isFrequent?: boolean
   isArchived?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -587,6 +611,7 @@ export type MemberUpdateWithoutDistrictPositionsInput = {
   honorific?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currentLodgeOffice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFrequent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -601,6 +626,7 @@ export type MemberUncheckedUpdateWithoutDistrictPositionsInput = {
   honorific?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   currentLodgeOffice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFrequent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isArchived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -646,6 +672,7 @@ export type MemberSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   honorific?: boolean
   currentLodgeOffice?: boolean
   notes?: boolean
+  isFrequent?: boolean
   isArchived?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -662,6 +689,7 @@ export type MemberSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   honorific?: boolean
   currentLodgeOffice?: boolean
   notes?: boolean
+  isFrequent?: boolean
   isArchived?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -676,6 +704,7 @@ export type MemberSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   honorific?: boolean
   currentLodgeOffice?: boolean
   notes?: boolean
+  isFrequent?: boolean
   isArchived?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -690,12 +719,13 @@ export type MemberSelectScalar = {
   honorific?: boolean
   currentLodgeOffice?: boolean
   notes?: boolean
+  isFrequent?: boolean
   isArchived?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type MemberOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "photo" | "lodge" | "pastMasterYears" | "honorific" | "currentLodgeOffice" | "notes" | "isArchived" | "createdAt" | "updatedAt", ExtArgs["result"]["member"]>
+export type MemberOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "photo" | "lodge" | "pastMasterYears" | "honorific" | "currentLodgeOffice" | "notes" | "isFrequent" | "isArchived" | "createdAt" | "updatedAt", ExtArgs["result"]["member"]>
 export type MemberInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   districtPositions?: boolean | Prisma.Member$districtPositionsArgs<ExtArgs>
   _count?: boolean | Prisma.MemberCountOutputTypeDefaultArgs<ExtArgs>
@@ -717,6 +747,7 @@ export type $MemberPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     honorific: string | null
     currentLodgeOffice: string | null
     notes: string | null
+    isFrequent: boolean
     isArchived: boolean
     createdAt: Date
     updatedAt: Date
@@ -1152,6 +1183,7 @@ export interface MemberFieldRefs {
   readonly honorific: Prisma.FieldRef<"Member", 'String'>
   readonly currentLodgeOffice: Prisma.FieldRef<"Member", 'String'>
   readonly notes: Prisma.FieldRef<"Member", 'String'>
+  readonly isFrequent: Prisma.FieldRef<"Member", 'Boolean'>
   readonly isArchived: Prisma.FieldRef<"Member", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Member", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Member", 'DateTime'>

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { Member } from "../data/members";
 
-type Tab = "directory" | "attendance" | "recognition";
+type Tab = "attendance" | "recognition";
 type SortOption = "year-asc" | "year-desc" | "name-asc" | "name-desc";
 type MemberFilter =
   | "all"
@@ -101,21 +101,37 @@ function matchesMemberFilter(member: Member, filter: MemberFilter) {
 
 function sortMembers(list: Member[], sort: SortOption) {
   return [...list].sort((a, b) => {
-    switch (sort) {
-      case "year-desc":
-        return (
-          getFirstYear(b) - getFirstYear(a) || a.name.localeCompare(b.name)
-        );
-      case "name-asc":
-        return a.name.localeCompare(b.name);
-      case "name-desc":
-        return b.name.localeCompare(a.name);
-      default:
-        return (
-          getFirstYear(a) - getFirstYear(b) || a.name.localeCompare(b.name)
-        );
+    if (sort === "name-asc") {
+      return a.name.localeCompare(b.name);
     }
+
+    if (sort === "name-desc") {
+      return b.name.localeCompare(a.name);
+    }
+
+    const aYear = getFirstYear(a);
+    const bYear = getFirstYear(b);
+
+    // Unknown PM years always appear last.
+    const aUnknown = aYear === Number.MAX_SAFE_INTEGER;
+    const bUnknown = bYear === Number.MAX_SAFE_INTEGER;
+
+    if (aUnknown !== bUnknown) {
+      return aUnknown ? 1 : -1;
+    }
+
+    if (sort === "year-desc") {
+      return bYear - aYear || a.name.localeCompare(b.name);
+    }
+
+    return aYear - bYear || a.name.localeCompare(b.name);
   });
+}
+
+function sortAttendanceMembers(list: Member[], sort: SortOption) {
+  return sortMembers(list, sort).sort(
+    (a, b) => Number(b.isFrequent) - Number(a.isFrequent),
+  );
 }
 
 // --------------------
@@ -276,14 +292,22 @@ function MemberCard({
       <MemberPhoto member={member} size={size} />
 
       <div className="min-w-0 flex-1">
-        <h3
-          className={`font-semibold text-slate-900 ${
-            isCompact ? "text-sm" : "text-base"
-          }`}
-        >
-          {member.honorific ? `${member.honorific} ` : ""}
-          {member.name}
-        </h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-semibold text-slate-900">
+            {member.honorific ? `${member.honorific} ` : ""}
+            {member.name}
+          </h3>
+
+          {selectable && member.isFrequent && (
+            <span
+              title="Frequent attendee"
+              aria-label="Frequent attendee"
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-xs text-amber-700"
+            >
+              ★
+            </span>
+          )}
+        </div>
 
         <p className="text-sm text-slate-600">
           Past Master · {getYearLabel(member)}
@@ -358,6 +382,8 @@ function MemberCard({
 export default function RecognitionClient({ members }: { members: Member[] }) {
   const [tab, setTab] = useState<Tab>("attendance");
   const [search, setSearch] = useState("");
+  const [forestCityExpanded, setForestCityExpanded] = useState(true);
+  const [otherLodgesExpanded, setOtherLodgesExpanded] = useState(true);
 
   const [sort, setSort] = useState<SortOption>("year-asc");
   const [recognitionSort, setRecognitionSort] =
@@ -431,7 +457,23 @@ export default function RecognitionClient({ members }: { members: Member[] }) {
   });
 
   // IMPORTANT: This goes AFTER the closing });
-  const sortedFilteredMembers = sortMembers(filteredMembers, sort);
+  const sortedFilteredMembers = sortAttendanceMembers(filteredMembers, sort);
+
+  const forestCityMembers = sortedFilteredMembers.filter(
+    (member) => member.lodge.trim().toLowerCase() === HOME_LODGE.toLowerCase(),
+  );
+
+  const otherLodgeMembers = sortedFilteredMembers.filter(
+    (member) => member.lodge.trim().toLowerCase() !== HOME_LODGE.toLowerCase(),
+  );
+
+  const forestCityPresent = forestCityMembers.filter((member) =>
+    selectedIds.has(member.id),
+  ).length;
+
+  const otherLodgesPresent = otherLodgeMembers.filter((member) =>
+    selectedIds.has(member.id),
+  ).length;
 
   // Recognition uses ALL selected members, regardless
   // of directory search/filter settings.
@@ -505,8 +547,8 @@ export default function RecognitionClient({ members }: { members: Member[] }) {
         </header>
 
         {/* Navigation */}
-        <nav className="mb-6 grid grid-cols-3 gap-2">
-          {(["directory", "attendance", "recognition"] as Tab[]).map((item) => (
+        <nav className="mb-6 grid grid-cols-2 gap-2">
+          {(["attendance", "recognition"] as Tab[]).map((item) => (
             <button
               key={item}
               onClick={() => setTab(item)}
@@ -578,21 +620,6 @@ export default function RecognitionClient({ members }: { members: Member[] }) {
           </div>
         )}
 
-        {/* Directory */}
-        {tab === "directory" && (
-          <>
-            <h2 className="mb-5 text-2xl font-bold">Member Directory</h2>
-
-            {renderGroup("All Brethren", sortedFilteredMembers, false)}
-
-            {filteredMembers.length === 0 && (
-              <p className="rounded-xl bg-white p-6 text-center text-slate-500">
-                No matching brethren.
-              </p>
-            )}
-          </>
-        )}
-
         {/* Attendance */}
         {tab === "attendance" && (
           <>
@@ -621,11 +648,68 @@ export default function RecognitionClient({ members }: { members: Member[] }) {
               </button>
             </div>
 
-            {renderGroup(
-              "Select Brethren Present",
-              sortedFilteredMembers,
-              true,
-            )}
+            <section className="mb-7">
+              <button
+                type="button"
+                onClick={() => setForestCityExpanded((prev) => !prev)}
+                aria-expanded={forestCityExpanded}
+                className="mb-3 flex w-full items-center justify-between rounded-xl bg-white p-4 text-left font-bold text-slate-800 shadow-sm"
+              >
+                <span className="flex flex-col gap-1">
+                  <span>Forest City Lodge</span>
+                  <span className="text-sm font-normal text-slate-600">
+                    {forestCityPresent} of {forestCityMembers.length} present
+                  </span>
+                </span>
+                <span>{forestCityExpanded ? "▲ Collapse" : "▼ Expand"}</span>
+              </button>
+
+              {forestCityExpanded && (
+                <div className="space-y-3">
+                  {forestCityMembers.map((member) => (
+                    <MemberCard
+                      key={member.id}
+                      member={member}
+                      selectable
+                      checked={selectedIds.has(member.id)}
+                      onToggle={() => toggleMember(member.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="mb-7">
+              <button
+                type="button"
+                onClick={() => setOtherLodgesExpanded((prev) => !prev)}
+                aria-expanded={otherLodgesExpanded}
+                className="mb-3 flex w-full items-center justify-between rounded-xl bg-white p-4 text-left font-bold text-slate-800 shadow-sm"
+              >
+                <span className="flex flex-col gap-1">
+                  <span>Other Lodges</span>
+                  <span className="text-sm font-normal text-slate-600">
+                    {otherLodgesPresent} of {otherLodgeMembers.length} present
+                  </span>
+                </span>
+
+                <span>{otherLodgesExpanded ? "▲ Collapse" : "▼ Expand"}</span>
+              </button>
+
+              {otherLodgesExpanded && (
+                <div className="space-y-3">
+                  {otherLodgeMembers.map((member) => (
+                    <MemberCard
+                      key={member.id}
+                      member={member}
+                      selectable
+                      checked={selectedIds.has(member.id)}
+                      onToggle={() => toggleMember(member.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
 
             {filteredMembers.length === 0 && (
               <p className="rounded-xl bg-white p-6 text-center text-slate-500">

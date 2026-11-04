@@ -43,6 +43,7 @@ async function EditMemberContent({ params }: Props) {
         currentLodgeOffice: member.currentLodgeOffice,
         notes: member.notes,
         isArchived: member.isArchived,
+        isFrequent: member.isFrequent,
 
         districtPositions: member.districtPositions.map((position) => ({
           title: position.title,

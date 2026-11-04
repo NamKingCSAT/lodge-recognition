@@ -8,6 +8,7 @@ export type DistrictPosition = {
 export type Member = {
   id: string;
   name: string;
+  isFrequent: boolean;
   photo?: string;
 
   // Lodge where the brother served as Worshipful Master
@@ -27,7 +28,7 @@ export type Member = {
 
   notes?: string;
 };
-
+/*
 export const members: Member[] = [
   // ==========================================
   // FOREST CITY LODGE PAST MASTERS
@@ -201,3 +202,4 @@ export const members: Member[] = [
     honorific: "R.W.B.",
   },
 ];
+*/

@@ -53,6 +53,7 @@ export async function PATCH(request: Request, { params }: Context) {
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const lodge = typeof body.lodge === "string" ? body.lodge.trim() : "";
   const years = body.pastMasterYears;
+  const isFrequent = body.isFrequent;
 
   const optionalText = (value: unknown, max: number) =>
     typeof value === "string" && value.trim().length <= max
@@ -71,7 +72,6 @@ export async function PATCH(request: Request, { params }: Context) {
     !lodge ||
     lodge.length > 150 ||
     !Array.isArray(years) ||
-    years.length < 1 ||
     years.length > 20 ||
     !years.every(
       (year: unknown) =>
@@ -82,7 +82,8 @@ export async function PATCH(request: Request, { params }: Context) {
     ) ||
     honorific === undefined ||
     currentLodgeOffice === undefined ||
-    notes === undefined
+    notes === undefined ||
+    typeof isFrequent !== "boolean"
   ) {
     return NextResponse.json(
       { error: "Invalid member information" },
@@ -158,6 +159,7 @@ export async function PATCH(request: Request, { params }: Context) {
         honorific,
         currentLodgeOffice,
         notes,
+        isFrequent,
         districtPositions: {
           deleteMany: {},
           create: positions,

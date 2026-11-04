@@ -17,6 +17,7 @@ model Member {
   honorific          String?
   currentLodgeOffice String?
   notes              String?
+  isFrequent Boolean @default(false)
 
   districtPositions  DistrictPosition[]
 

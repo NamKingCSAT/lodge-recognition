@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 type MemberInput = {
   name?: unknown;
   lodge?: unknown;
+  isFrequent?: unknown;
   pastMasterYears?: unknown;
   honorific?: unknown;
   currentLodgeOffice?: unknown;
@@ -28,13 +29,15 @@ export async function POST(request: Request) {
 
     const years = body.pastMasterYears;
 
+    const isFrequent = body.isFrequent;
+
     if (
       !name ||
       name.length > 150 ||
       !lodge ||
       lodge.length > 150 ||
       !Array.isArray(years) ||
-      years.length === 0 ||
+      typeof isFrequent !== "boolean" ||
       years.length > 20 ||
       !years.every(
         (year) =>
@@ -77,6 +80,7 @@ export async function POST(request: Request) {
       data: {
         name,
         lodge,
+        isFrequent,
         pastMasterYears: [...new Set(years as number[])].sort((a, b) => a - b),
         honorific: honorific || null,
         currentLodgeOffice: currentLodgeOffice || null,

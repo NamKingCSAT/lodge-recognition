@@ -614,6 +614,7 @@ export const MemberScalarFieldEnum = {
   honorific: 'honorific',
   currentLodgeOffice: 'currentLodgeOffice',
   notes: 'notes',
+  isFrequent: 'isFrequent',
   isArchived: 'isArchived',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
