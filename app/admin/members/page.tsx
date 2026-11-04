@@ -34,6 +34,7 @@ async function ManageRosterContent() {
     honorific: member.honorific,
     currentLodgeOffice: member.currentLodgeOffice,
     pastMasterYears: member.pastMasterYears,
+    isFrequent: member.isFrequent,
     isArchived: member.isArchived,
     districtPositions: member.districtPositions.map((position) => ({
       id: position.id,

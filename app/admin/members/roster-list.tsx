@@ -19,6 +19,7 @@ type RosterMember = {
   honorific: string | null;
   currentLodgeOffice: string | null;
   pastMasterYears: number[];
+  isFrequent: boolean;
   isArchived: boolean;
   districtPositions: DistrictPosition[];
 };
@@ -26,6 +27,8 @@ type RosterMember = {
 export default function RosterList({ members }: { members: RosterMember[] }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"active" | "archived" | "all">("active");
+  const [sort, setSort] = useState<SortOption>("name-asc");
+  type SortOption = "name-asc" | "name-desc" | "year-asc" | "year-desc";
 
   const filtered = members.filter((member) => {
     const searchable = [
@@ -47,6 +50,44 @@ export default function RosterList({ members }: { members: RosterMember[] }) {
       (status === "archived" && member.isArchived);
 
     return matchesSearch && matchesStatus;
+  });
+
+  const sortedMembers = [...filtered].sort((a, b) => {
+    // Frequent attendees always appear first.
+    const frequentDifference = Number(b.isFrequent) - Number(a.isFrequent);
+
+    if (frequentDifference !== 0) {
+      return frequentDifference;
+    }
+
+    const nameComparison = a.name.localeCompare(b.name);
+
+    if (sort === "name-asc") {
+      return nameComparison;
+    }
+
+    if (sort === "name-desc") {
+      return -nameComparison;
+    }
+
+    const firstYear = (member: RosterMember) =>
+      member.pastMasterYears.length > 0
+        ? Math.min(...member.pastMasterYears)
+        : null;
+
+    const aYear = firstYear(a);
+    const bYear = firstYear(b);
+
+    // Unknown PM years always appear last within each group.
+    if (aYear === null && bYear === null) return nameComparison;
+    if (aYear === null) return 1;
+    if (bYear === null) return -1;
+
+    if (sort === "year-desc") {
+      return bYear - aYear || nameComparison;
+    }
+
+    return aYear - bYear || nameComparison;
   });
 
   const activeCount = members.filter((member) => !member.isArchived).length;
@@ -84,6 +125,20 @@ export default function RosterList({ members }: { members: RosterMember[] }) {
             </button>
           ))}
         </div>
+
+        <label className="mt-4 block text-sm font-medium text-slate-700">
+          Sort by
+          <select
+            value={sort}
+            onChange={(event) => setSort(event.target.value as SortOption)}
+            className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"
+          >
+            <option value="name-asc">Name: A–Z</option>
+            <option value="name-desc">Name: Z–A</option>
+            <option value="year-asc">PM Year: Oldest First</option>
+            <option value="year-desc">PM Year: Newest First</option>
+          </select>
+        </label>
       </div>
 
       <p className="mb-3 text-sm text-slate-500">
@@ -91,7 +146,7 @@ export default function RosterList({ members }: { members: RosterMember[] }) {
       </p>
 
       <div className="space-y-3">
-        {filtered.map((member) => (
+        {sortedMembers.map((member) => (
           <article
             key={member.id}
             className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
@@ -114,10 +169,22 @@ export default function RosterList({ members }: { members: RosterMember[] }) {
             )}
 
             <div className="min-w-0 flex-1">
-              <h2 className="font-semibold text-slate-900">
-                {member.honorific ? `${member.honorific} ` : ""}
-                {member.name}
-              </h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-semibold text-slate-900">
+                  {member.honorific ? `${member.honorific} ` : ""}
+                  {member.name}
+                </h2>
+
+                {member.isFrequent && (
+                  <span
+                    title="Frequent attendee"
+                    aria-label="Frequent attendee"
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-xs text-amber-700"
+                  >
+                    ★
+                  </span>
+                )}
+              </div>
 
               <p className="text-sm text-slate-600">
                 Past Master · {member.pastMasterYears.join(", ") || "Unknown"}
