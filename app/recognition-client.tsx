@@ -480,14 +480,18 @@ export default function RecognitionClient({ members }: { members: Member[] }) {
   const attending = members.filter((member) => selectedIds.has(member.id));
 
   const attendingDistrictOfficers = sortMembers(
-    attending.filter((member) => member.districtPositions.length > 0),
+    attending.filter(
+      (member) =>
+        member.lodge.trim().toLowerCase() !== HOME_LODGE.toLowerCase() &&
+        member.districtPositions.length > 0,
+    ),
     recognitionSort,
   );
 
   const attendingPastMasters = sortMembers(
     attending.filter(
       (member) =>
-        isHomePastMaster(member) && member.districtPositions.length === 0,
+        member.lodge.trim().toLowerCase() === HOME_LODGE.toLowerCase(),
     ),
     recognitionSort,
   );
@@ -785,7 +789,7 @@ export default function RecognitionClient({ members }: { members: Member[] }) {
               </p>
             )}
             {renderGroup(
-              "District Officers",
+              "Visiting District Officers",
               attendingDistrictOfficers,
               false,
               recognitionView === "compact" ? "compact" : "large",
